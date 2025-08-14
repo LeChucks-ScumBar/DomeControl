@@ -1,0 +1,12 @@
+Output: NC Drill Files
+Type  : NC Drill
+From  : PCB Document [DomeControl.PcbDoc]
+   Generated File[DomeControl.TXT]
+   Generated File[DomeControl.LDP]
+   Generated File[DomeControl.DRR]
+
+
+Files Generated   : 3
+Documents Printed : 0
+
+Finished Output Generation At 08:31:34 On 06.02.2025
