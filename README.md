@@ -10,3 +10,8 @@ anstehende Schritte:
  - Elektronik und Schalter montieren und anschließen
  - Programmierung finalisieren 
  - Test steurung mit N.I.N.A und Kuppel
+ 
+ 
+ 
+ Software von:
+ https://github.com/juanmb/ArduinoDomeController
