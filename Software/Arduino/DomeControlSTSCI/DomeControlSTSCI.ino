@@ -39,7 +39,7 @@ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 //#define USE_BUTTONS   // Uncomment if you want to move the dome with push buttons
 
 #define AZ_TIMEOUT      30000   // Azimuth movement timeout (in ms)
-#define AZ_TOLERANCE    4      	// Azimuth target tolerance in encoder ticks
+#define AZ_TOLERANCE    86      	// Azimuth target tolerance in encoder ticks    //----------------------------------------------------- change from 4 to 40
 #define AZ_SLOW_RANGE   8       // The motor will run at slower speed when the
                                 // dome is at this number of ticks from the target
 
@@ -65,8 +65,8 @@ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 #define MOTOR_JOG 8     // Motor jog mode (low speed)
 #define MOTOR_CW 4      // Move motor clockwise fast
 #define MOTOR_CCW 5     // Move motor counterclockwise fast
-#define MOTOR_CW_slow 6      // Move motor clockwise slow
-#define MOTOR_CCW_slow 7     // Move motor counterclockwise slow
+#define MOTOR_CW_slow 4      // Move motor clockwise slow
+#define MOTOR_CCW_slow 5     // Move motor counterclockwise slow
 #endif
 
 // Message Destination
@@ -157,11 +157,11 @@ bool park_on_shutter = false;
 bool home_reached = false;
 bool parking = false;
 uint8_t current_dir = DIR_CW;   // Current azimuth movement direction
-uint16_t park_pos = 0;          // Parking position
+uint16_t park_pos = 0;          // Parking position                     -------------------------- hier noch anpassen
 uint16_t current_pos = 0;       // Current dome position
 uint16_t target_pos = 0;        // Target dome position
-uint16_t home_pos = 0;          // Home position
-uint16_t ticks_per_turn = 360;  // Encoder ticks per dome revolution
+uint16_t home_pos = 0;          // Home position                        -------------------------- hier noch anpassen
+uint16_t ticks_per_turn = 7800;  // Encoder ticks per dome revolution  --------------------------hier Ticks für 360° umdrehung
 AzimuthStatus state = ST_IDLE;
 AzimuthEvent az_event = EVT_NONE;
 
@@ -230,18 +230,21 @@ inline void moveAzimuth(uint8_t dir, bool slow)
     if(slow)
     {
       digitalWrite(MOTOR_JOG, slow);
-      digitalWrite(MOTOR_CW, LOW);
-      digitalWrite(MOTOR_CCW, LOW);
-      digitalWrite(MOTOR_CW_slow, dir == DIR_CW);
-      digitalWrite(MOTOR_CCW_slow, dir != DIR_CW);
+    //  digitalWrite(MOTOR_CW, LOW);
+    //  digitalWrite(MOTOR_CCW, LOW);
+    //  digitalWrite(MOTOR_CW_slow, dir == DIR_CW);
+    //digitalWrite(MOTOR_CCW_slow, dir != DIR_CW);
+    
+      digitalWrite(MOTOR_CW, dir == DIR_CW);
+      digitalWrite(MOTOR_CCW, dir != DIR_CW);
     }
     else
     {
       digitalWrite(MOTOR_JOG, slow);
       digitalWrite(MOTOR_CW, dir == DIR_CW);
       digitalWrite(MOTOR_CCW, dir != DIR_CW);
-      digitalWrite(MOTOR_CW_slow, LOW);
-      digitalWrite(MOTOR_CCW_slow, LOW);
+     // digitalWrite(MOTOR_CW_slow, LOW);
+     // digitalWrite(MOTOR_CCW_slow, LOW);
 
     }
 
@@ -563,7 +566,6 @@ void setup()
     sCmd.addCommand(TICKS_CMD, 4, cmdSetTicks);
     sCmd.addCommand(ACK_CMD, 2, cmdAck);
     sCmd.addCommand(VBAT_CMD, 2, cmdVBat);
-
     pinMode(LED_BUILTIN, OUTPUT);
     pinMode(HOME_SENSOR, INPUT_PULLUP);
  //   pinMode(BUTTON_CW, INPUT_PULLUP);
@@ -584,7 +586,8 @@ void setup()
     ticks_per_turn = eepromReadUint16(ADDR_TICKS_PER_TURN);
 
     Serial.begin(19200);
-
+    Serial.println("hello there2");
+    
 #ifdef HAS_SHUTTER
     HC12.begin(9600);   // Open serial port to HC12
 #endif
@@ -637,6 +640,7 @@ void loop()
             home_pos = 0;
             current_pos = 0;
             home_reached = true;
+            Serial.println("home");
         }
         else
             home_pos = current_pos;
