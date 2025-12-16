@@ -161,7 +161,7 @@ uint16_t park_pos = 0;          // Parking position                     --------
 uint16_t current_pos = 0;       // Current dome position
 uint16_t target_pos = 0;        // Target dome position
 uint16_t home_pos = 0;          // Home position                        -------------------------- hier noch anpassen
-uint16_t ticks_per_turn = 7800;  // Encoder ticks per dome revolution  --------------------------hier Ticks für 360° umdrehung
+uint16_t ticks_per_turn = 7167;  // Encoder ticks per dome revolution  --------------------------hier Ticks für 360° umdrehung
 AzimuthStatus state = ST_IDLE;
 AzimuthEvent az_event = EVT_NONE;
 
