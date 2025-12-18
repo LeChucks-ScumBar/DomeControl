@@ -39,8 +39,8 @@ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 //#define USE_BUTTONS   // Uncomment if you want to move the dome with push buttons
 
 #define AZ_TIMEOUT      30000   // Azimuth movement timeout (in ms)
-#define AZ_TOLERANCE    86      	// Azimuth target tolerance in encoder ticks    //----------------------------------------------------- change from 4 to 40
-#define AZ_SLOW_RANGE   8       // The motor will run at slower speed when the
+#define AZ_TOLERANCE    46      	// Azimuth target tolerance in encoder ticks    //----------------------------------------------------- change from 4 to 40
+#define AZ_SLOW_RANGE   500       // The motor will run at slower speed when the
                                 // dome is at this number of ticks from the target
 
 // pin definitions
@@ -56,19 +56,22 @@ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 #endif
 
 // pins of HC12 module (serial radio transceiver)
-#define HC12_RX 2       // Receive Pin on HC12
-#define HC12_TX 1      // Transmit Pin on HC12
+//#define HC12_RX 2       // Receive Pin on HC12
+//#define HC12_TX 1      // Transmit Pin on HC12
 #endif
 
 // motor pins (if not using the Monster Motor Shield)
 #ifndef MOTOR_SHIELD
 #define MOTOR_JOG 8     // Motor jog mode (low speed)
-#define MOTOR_CW 4      // Move motor clockwise fast
-#define MOTOR_CCW 5     // Move motor counterclockwise fast
-#define MOTOR_CW_slow 4      // Move motor clockwise slow
-#define MOTOR_CCW_slow 5     // Move motor counterclockwise slow
+#define MOTOR_CW 5      // Move motor clockwise fast
+#define MOTOR_CCW 4     // Move motor counterclockwise fast
+#define MOTOR_CW_slow 5      // Move motor clockwise slow
+#define MOTOR_CCW_slow 4     // Move motor counterclockwise slow
+#define fast_fu 6
+#define slow_fu 7
 #endif
 
+#define FIX_Ticks_PER_TURN 7167
 // Message Destination
 #define TO_MAXDOME  0x00
 #define TO_COMPUTER 0x80
@@ -144,7 +147,7 @@ enum ShutterStatus {
 
 #ifdef HAS_SHUTTER
 // Create a Software Serial Port to communicate with the shutter controller
-SoftwareSerial HC12(HC12_TX, HC12_RX);
+//SoftwareSerial HC12(HC12_TX, HC12_RX);
 #endif
 
 SerialCommand sCmd;
@@ -161,7 +164,7 @@ uint16_t park_pos = 0;          // Parking position                     --------
 uint16_t current_pos = 0;       // Current dome position
 uint16_t target_pos = 0;        // Target dome position
 uint16_t home_pos = 0;          // Home position                        -------------------------- hier noch anpassen
-uint16_t ticks_per_turn = 7167;  // Encoder ticks per dome revolution  --------------------------hier Ticks für 360° umdrehung
+uint16_t ticks_per_turn; // = 7167//; FIX_Ticks_PER_TURN; //7167;  // Encoder ticks per dome revolution  --------------------------hier Ticks für 360° umdrehung
 AzimuthStatus state = ST_IDLE;
 AzimuthEvent az_event = EVT_NONE;
 
@@ -227,25 +230,27 @@ inline void moveAzimuth(uint8_t dir, bool slow)
     int speed = slow ? 800 : 1023;
     motor.run(dir == DIR_CW, speed);
 #else
+    if(dir == true)
+    {
+        digitalWrite(MOTOR_CW_slow, true);
+        digitalWrite(MOTOR_CCW_slow, false);
+    }else
+    {
+        
+        digitalWrite(MOTOR_CW_slow, false);
+        digitalWrite(MOTOR_CCW_slow, true);
+    }
     if(slow)
     {
-      digitalWrite(MOTOR_JOG, slow);
-    //  digitalWrite(MOTOR_CW, LOW);
-    //  digitalWrite(MOTOR_CCW, LOW);
-    //  digitalWrite(MOTOR_CW_slow, dir == DIR_CW);
-    //digitalWrite(MOTOR_CCW_slow, dir != DIR_CW);
-    
-      digitalWrite(MOTOR_CW, dir == DIR_CW);
-      digitalWrite(MOTOR_CCW, dir != DIR_CW);
+        digitalWrite(fast_fu, false);
+        digitalWrite(slow_fu, true);
     }
     else
     {
-      digitalWrite(MOTOR_JOG, slow);
-      digitalWrite(MOTOR_CW, dir == DIR_CW);
-      digitalWrite(MOTOR_CCW, dir != DIR_CW);
-     // digitalWrite(MOTOR_CW_slow, LOW);
-     // digitalWrite(MOTOR_CCW_slow, LOW);
-
+      
+        digitalWrite(fast_fu, true);
+        digitalWrite(slow_fu, false);
+      
     }
 
 
@@ -263,6 +268,8 @@ inline void stopAzimuth()
     digitalWrite(MOTOR_CCW, LOW);
     digitalWrite(MOTOR_CW_slow, LOW);
     digitalWrite(MOTOR_CCW_slow, LOW);
+    digitalWrite(fast_fu, false);
+    digitalWrite(slow_fu, false);
 #endif
 }
 
@@ -577,13 +584,16 @@ void setup()
     pinMode(MOTOR_CCW, OUTPUT);
     pinMode(MOTOR_CW_slow, OUTPUT);
     pinMode(MOTOR_CCW_slow, OUTPUT);
+    pinMode(fast_fu, OUTPUT);
+    pinMode(slow_fu, OUTPUT);
+    
 #endif
 
     attachInterrupt(digitalPinToInterrupt(ENCODER1), encoderISR, CHANGE);
 
     park_pos = eepromReadUint16(ADDR_PARK_POS);
     park_on_shutter = EEPROM.read(ADDR_PARK_ON_SHUTTER);
-    ticks_per_turn = eepromReadUint16(ADDR_TICKS_PER_TURN);
+    ticks_per_turn = FIX_Ticks_PER_TURN; //eepromReadUint16(ADDR_TICKS_PER_TURN);
 
     Serial.begin(19200);
     Serial.println("hello there2");
