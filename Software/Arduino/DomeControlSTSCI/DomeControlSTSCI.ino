@@ -40,7 +40,7 @@ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 
 #define AZ_TIMEOUT      30000   // Azimuth movement timeout (in ms)
 #define AZ_TOLERANCE    46      	// Azimuth target tolerance in encoder ticks    //----------------------------------------------------- change from 4 to 40
-#define AZ_SLOW_RANGE   500       // The motor will run at slower speed when the
+#define AZ_SLOW_RANGE   200       // The motor will run at slower speed when the
                                 // dome is at this number of ticks from the target
 
 // pin definitions
@@ -164,10 +164,12 @@ uint16_t park_pos = 0;          // Parking position                     --------
 uint16_t current_pos = 0;       // Current dome position
 uint16_t target_pos = 0;        // Target dome position
 uint16_t home_pos = 0;          // Home position                        -------------------------- hier noch anpassen
-uint16_t ticks_per_turn; // = 7167//; FIX_Ticks_PER_TURN; //7167;  // Encoder ticks per dome revolution  --------------------------hier Ticks für 360° umdrehung
+uint16_t ticks_per_turn =  FIX_Ticks_PER_TURN; //7167;  // Encoder ticks per dome revolution  --------------------------hier Ticks für 360° umdrehung
 AzimuthStatus state = ST_IDLE;
 AzimuthEvent az_event = EVT_NONE;
 
+uint16_t encoderPinALast = LOW;
+uint16_t encoderPinANow = LOW;
 
 // Convert two bytes to a uint16_t value (big endian)
 uint16_t bytesToInt(uint8_t *data)
@@ -542,9 +544,28 @@ void updateAzimuthFSM()
     az_event = EVT_NONE;
 }
 
+int oldEnc1;
 // Encoder interrupt service routine
 void encoderISR()
 {
+
+encoderPinANow = digitalRead(ENCODER1);
+
+  if ((encoderPinALast == HIGH) && (encoderPinANow == LOW)) {
+    if (digitalRead(ENCODER2) == HIGH) {
+              if (current_pos >= ticks_per_turn - 1)
+            current_pos = 0;
+        else
+            current_pos++;
+    } else {
+      if (current_pos == 0)
+            current_pos = ticks_per_turn - 1;
+        else
+            current_pos--;
+    }
+  }
+  encoderPinALast = encoderPinANow;
+    /*
     if(digitalRead(ENCODER1) == digitalRead(ENCODER2)) {
         if (current_pos == 0)
             current_pos = ticks_per_turn - 1;
@@ -556,7 +577,7 @@ void encoderISR()
             current_pos = 0;
         else
             current_pos++;
-    }
+    }*/
 }
 
 void setup()
@@ -575,6 +596,10 @@ void setup()
     sCmd.addCommand(VBAT_CMD, 2, cmdVBat);
     pinMode(LED_BUILTIN, OUTPUT);
     pinMode(HOME_SENSOR, INPUT_PULLUP);
+    
+    pinMode(ENCODER1, INPUT_PULLUP);
+    
+    pinMode(ENCODER2, INPUT_PULLUP);
  //   pinMode(BUTTON_CW, INPUT_PULLUP);
  //   pinMode(BUTTON_CCW, INPUT_PULLUP);
 
@@ -604,6 +629,7 @@ void setup()
 }
 
 // move the motor when the buttons are pressed
+
 void read_buttons()
 {
    /* static int prev_cw_button = 0, prev_ccw_button = 0;
@@ -635,6 +661,7 @@ void read_buttons()
 }
 
 
+
 void loop()
 {
     sCmd.readSerial();
@@ -655,4 +682,7 @@ void loop()
         else
             home_pos = current_pos;
     }
+/*
+
+    }}*/
 }
