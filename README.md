@@ -8,7 +8,6 @@ Status: Entwurf
 
 anstehende Schritte:
  - Elektronik und Schalter montieren und anschließen
- - Programmierung finalisieren 
  - Test steurung mit N.I.N.A und Kuppel
  
  
